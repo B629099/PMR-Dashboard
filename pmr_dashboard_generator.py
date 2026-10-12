@@ -1396,11 +1396,9 @@ def streamlit_app():
         )
     with right:
          st.title("PMR Analysis Dashboard")
-              st.caption(
-                    "Upload a PMR comparison workbook and review executive variance insights."
-                )
+         st.caption("Upload a PMR comparison workbook and review executive variance insights.")
     else:
-            st.markdown(
+         st.markdown(
                 """
                 <div class="avangrid-brand">
                     <div class="avangrid-wordmark">AVANGRID</div>
