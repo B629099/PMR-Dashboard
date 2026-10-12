@@ -1394,12 +1394,12 @@ def streamlit_app():
             str(logo_path),
             width=220
         )
-            with right:
-                st.title("PMR Analysis Dashboard")
-                st.caption(
+    with right:
+         st.title("PMR Analysis Dashboard")
+              st.caption(
                     "Upload a PMR comparison workbook and review executive variance insights."
                 )
-        else:
+    else:
             st.markdown(
                 """
                 <div class="avangrid-brand">
