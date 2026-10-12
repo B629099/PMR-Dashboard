@@ -1276,7 +1276,7 @@ def build(path, sheets, data):
             >
 
             <title>
-                AVANGRID PMR Executive Dashboard
+                AVANGRID PMR Analysis Dashboard
             </title>
 
             <style>
@@ -1287,7 +1287,7 @@ def build(path, sheets, data):
         <body>
             <header>
                 <h1>
-                    AVANGRID PMR Executive Dashboard
+                    AVANGRID PMR Analysis Dashboard
                 </h1>
 
                 <p>
@@ -1387,27 +1387,31 @@ def streamlit_app():
 
     logo_path = Path("avangrid_logo.png")
     if logo_path.exists():
-        left, right = st.columns([1, 6], vertical_alignment="center")
-        with left:
-            st.image(str(logo_path), use_container_width=True)
-        with right:
-            st.title("PMR Executive Dashboard")
-            st.caption(
-                "Upload a PMR comparison workbook and review executive variance insights."
-            )
-    else:
-        st.markdown(
-            """
-            <div class="avangrid-brand">
-                <div class="avangrid-wordmark">AVANGRID</div>
-                <div>
-                    <h1>PMR Executive Dashboard</h1>
-                    <p>Upload a PMR comparison workbook and review executive variance insights.</p>
-                </div>
-            </div>
-            """,
-            unsafe_allow_html=True,
+        left, right = st.columns([2, 6])
+
+    with left:
+        st.image(
+            str(logo_path),
+            width=220
         )
+            with right:
+                st.title("PMR Analysis Dashboard")
+                st.caption(
+                    "Upload a PMR comparison workbook and review executive variance insights."
+                )
+        else:
+            st.markdown(
+                """
+                <div class="avangrid-brand">
+                    <div class="avangrid-wordmark">AVANGRID</div>
+                    <div>
+                        <h1>PMR Analysis Dashboard</h1>
+                        <p>Upload a PMR comparison workbook and review executive variance insights.</p>
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
 
     with st.sidebar:
         st.header("PMR Navigation")
