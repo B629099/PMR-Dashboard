@@ -1,4 +1,4 @@
-from __future__ import annotations
+ from __future__ import annotations
 
 import html
 import math
@@ -442,13 +442,13 @@ def ranking_table(rows):
     body = []
     for rank, row in enumerate(top_five, 1):
         if row["current"] > row["prior"]:
-            message = "Positive variation: Current is higher than Prior"
+            message = "▲ Current is higher than Prior"
             css_class = "pos"
         elif row["current"] < row["prior"]:
-            message = "Negative variation: Prior is higher than Current"
+            message = "▼ Prior is higher than Current"
             css_class = "neg"
         else:
-            message = "No variation: Current and Prior are equal"
+            message = "● Current and Prior are equal"
             css_class = "neutral"
         body.append(f"""
         <tr>
@@ -597,6 +597,10 @@ def table(rows, sheet_name):
                 if row.get("is_bold", False)
                 else ""
             )
+            is_material = (
+                row["varpct"] is not None
+                and abs(row["varpct"]) > 0.004
+            )
 
             label_html = html.escape(
                 row["label"]
@@ -612,6 +616,7 @@ def table(rows, sheet_name):
                 <tr
                     class="{row_class}"
                     data-search="{search_value}"
+                    data-material="{str(is_material).lower()}"
                 >
                     <td>{label_html}</td>
                     <td>
@@ -833,6 +838,21 @@ def build(path, sheets, data):
         margin-left: 12px;
     }
 
+    .material-filter {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-left: 22px;
+        color: #29445B;
+        font-weight: 600;
+    }
+
+    .material-filter input {
+        width: 17px;
+        height: 17px;
+        margin: 0;
+    }
+
     main {
         max-width: 1540px;
         margin: auto;
@@ -945,11 +965,13 @@ def build(path, sheets, data):
     }
 
     .pos {
-        color: #2E8540;
+        color: #107C10;
+        font-weight: 700;
     }
 
     .neg {
-        color: #D13438;
+        color: #C50F1F;
+        font-weight: 700;
     }
     .neutral { color: #68768A; }
     .ranking-table-wrap {
@@ -1160,6 +1182,20 @@ def build(path, sheets, data):
         }
     });
 
+    const materialOnly = document.getElementById("materialOnly");
+
+    function applyMaterialFilter() {
+        const activeSheet = document.querySelector(".sheet.active");
+        if (!activeSheet) return;
+        activeSheet.querySelectorAll("tbody tr[data-material]").forEach(row => {
+            const show = !materialOnly.checked || row.dataset.material === "true";
+            row.style.display = show ? "" : "none";
+        });
+    }
+
+    materialOnly.addEventListener("change", applyMaterialFilter);
+    selector.addEventListener("change", () => setTimeout(applyMaterialFilter, 0));
+
     document
         .querySelectorAll(".sheet-search")
         .forEach(input => {
@@ -1240,7 +1276,7 @@ def build(path, sheets, data):
             >
 
             <title>
-                PMR Comparison Dashboard
+                AVANGRID PMR Executive Dashboard
             </title>
 
             <style>
@@ -1251,14 +1287,14 @@ def build(path, sheets, data):
         <body>
             <header>
                 <h1>
-                    PMR Comparison Dashboard
+                    AVANGRID PMR Executive Dashboard
                 </h1>
 
                 <p>
                     Source:
                     {html.escape(path.name)}
                     ·
-                    Local interactive dashboard
+                    Interactive PMR variance analysis
                 </p>
             </header>
 
@@ -1268,6 +1304,11 @@ def build(path, sheets, data):
                 <select id="sel">
                     {worksheet_options}
                 </select>
+
+                <label class="material-filter">
+                    <input id="materialOnly" type="checkbox">
+                    Show only variances outside ±0.4%
+                </label>
             </div>
 
             <main>
@@ -1286,7 +1327,8 @@ def build(path, sheets, data):
 def streamlit_app():
     """Display the dashboard and allow the Excel source to be replaced."""
     st.set_page_config(
-        page_title="PMR Comparison Dashboard",
+        page_title="AVANGRID PMR Executive Dashboard",
+        page_icon="📊",
         layout="wide",
     )
 
@@ -1299,22 +1341,85 @@ def streamlit_app():
             padding-right: 1.5rem;
             max-width: 100%;
         }
+        .avangrid-brand {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            padding: 18px 22px;
+            margin-bottom: 16px;
+            color: white;
+            background: linear-gradient(120deg, #12344D, #18577F);
+            border-radius: 14px;
+            box-shadow: 0 4px 16px rgba(23, 43, 77, 0.12);
+        }
+        .avangrid-wordmark {
+            min-width: 150px;
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: 1.6px;
+            color: #7AC143;
+        }
+        .avangrid-brand h1 {
+            margin: 0;
+            font-size: 34px;
+        }
+        .avangrid-brand p {
+            margin: 4px 0 0;
+            opacity: 0.88;
+        }
         div[data-testid="stFileUploader"] {
             background: #ffffff;
             border: 1px solid #d9e2ec;
             border-radius: 12px;
             padding: 0.8rem 1rem;
         }
+        div[data-testid="stMetric"] {
+            background: white;
+            border: 1px solid #E4EAF0;
+            border-top: 3px solid #0072CE;
+            border-radius: 12px;
+            padding: 14px;
+        }
         </style>
         """,
         unsafe_allow_html=True,
     )
 
-    st.title("PMR Comparison Dashboard")
-    st.caption(
-        "Choose an Excel comparison file below. Selecting a different file "
-        "rebuilds and updates the dashboard automatically."
-    )
+    logo_path = Path("avangrid_logo.png")
+    if logo_path.exists():
+        left, right = st.columns([1, 6], vertical_alignment="center")
+        with left:
+            st.image(str(logo_path), use_container_width=True)
+        with right:
+            st.title("PMR Executive Dashboard")
+            st.caption(
+                "Upload a PMR comparison workbook and review executive variance insights."
+            )
+    else:
+        st.markdown(
+            """
+            <div class="avangrid-brand">
+                <div class="avangrid-wordmark">AVANGRID</div>
+                <div>
+                    <h1>PMR Executive Dashboard</h1>
+                    <p>Upload a PMR comparison workbook and review executive variance insights.</p>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    with st.sidebar:
+        st.header("PMR Navigation")
+        st.caption("Upload a workbook, then use the worksheet selector inside the dashboard.")
+        st.markdown("**Materiality rule**")
+        st.write("Green: variance within ±0.4%")
+        st.write("Red: variance outside ±0.4%")
+        st.divider()
+        st.caption(
+            "Files are processed for the current session. The app does not intentionally save "
+            "uploaded workbooks to the repository."
+        )
 
     uploaded_file = st.file_uploader(
         "Choose PMR comparison file",
@@ -1324,41 +1429,67 @@ def streamlit_app():
     )
 
     if uploaded_file is None:
-        st.info(
-            "Select an .xlsx or .xlsm file to generate the dashboard."
-        )
+        st.info("Select an .xlsx or .xlsm file to generate the dashboard.")
         return
 
     suffix = Path(uploaded_file.name).suffix.lower()
     temporary_path = None
 
     try:
-        # openpyxl works most reliably from a real temporary path.
-        with tempfile.NamedTemporaryFile(
-            delete=False,
-            suffix=suffix,
-        ) as temporary_file:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as temporary_file:
             temporary_file.write(uploaded_file.getbuffer())
             temporary_path = Path(temporary_file.name)
 
         sheets, data = read_excel(temporary_path)
-        dashboard_html = build(
-            Path(uploaded_file.name),
-            sheets,
-            data,
-        )
+        dashboard_html = build(Path(uploaded_file.name), sheets, data)
+        available_sheets = [sheet for sheet in sheets if data.get(sheet)]
+        all_rows = [row for sheet in available_sheets for row in data[sheet]]
+        numeric_rows = [
+            row for row in all_rows
+            if row["var"] is not None and not row["is_pct"]
+        ]
+        material_rows = [
+            row for row in all_rows
+            if row["varpct"] is not None and abs(row["varpct"]) > 0.004
+        ]
 
         st.success(f"Dashboard updated from: {uploaded_file.name}")
-        components.html(
-            dashboard_html,
-            height=2400,
-            scrolling=True,
+
+        metric_1, metric_2, metric_3, metric_4 = st.columns(4)
+        metric_1.metric("Loaded workbook", uploaded_file.name)
+        metric_2.metric("Worksheets detected", len(available_sheets))
+        metric_3.metric("Numeric metrics", len(numeric_rows))
+        metric_4.metric("Outside ±0.4%", len(material_rows))
+
+        download_1, download_2 = st.columns(2)
+        with download_1:
+            st.download_button(
+                "Download original workbook",
+                data=uploaded_file.getvalue(),
+                file_name=uploaded_file.name,
+                mime=(
+                    "application/vnd.openxmlformats-officedocument."
+                    "spreadsheetml.sheet"
+                ),
+                use_container_width=True,
+            )
+        with download_2:
+            st.download_button(
+                "Download dashboard HTML",
+                data=dashboard_html.encode("utf-8"),
+                file_name=f"{Path(uploaded_file.name).stem} - Dashboard.html",
+                mime="text/html",
+                use_container_width=True,
+            )
+
+        st.caption(
+            "Inside the dashboard, use the worksheet dropdown and the "
+            "'Show only variances outside ±0.4%' filter."
         )
+        components.html(dashboard_html, height=3600, scrolling=True)
 
     except Exception as error:
-        st.error(
-            "The dashboard could not be created from the selected file."
-        )
+        st.error("The dashboard could not be created from the selected file.")
         st.exception(error)
 
     finally:
