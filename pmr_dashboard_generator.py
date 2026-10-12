@@ -1387,20 +1387,25 @@ def streamlit_app():
 
     logo_path = Path("avangrid_logo.png")
     if logo_path.exists():
-        left, right = st.columns([2, 6])
+
+    left, right = st.columns([3, 6])
 
     with left:
         st.image(
             str(logo_path),
-            width=220
+            width=260
         )
+
     with right:
-         st.title("PMR Analysis Dashboard")
-         st.caption("Upload a PMR comparison workbook and review executive variance insights.")
-    else:
-         st.markdown(
-                """
-                <div class="avangrid-brand">
+        st.title("PMR Analysis Dashboard")
+        st.caption(
+            "Upload a PMR comparison workbook and review executive variance insights."
+        )
+
+else:
+    st.markdown(
+        """
+        <div class="avangrid-brand">
                     <div class="avangrid-wordmark">AVANGRID</div>
                     <div>
                         <h1>PMR Analysis Dashboard</h1>
